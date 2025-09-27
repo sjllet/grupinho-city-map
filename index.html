@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Grupinho City Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { width: 100%; height: 100%; }
+
+    #controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.85);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      z-index: 1000;
+      max-height: 90%;
+      overflow-y: auto;
+    }
+
+    #controls h3 {
+      margin: 0;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #toggle-list {
+      margin-top: 8px;
+      display: none;
+    }
+
+    .toggle-item {
+      display: flex;
+      align-items: center;
+      margin: 2px 0;
+    }
+
+    .toggle-item img {
+      width: 20px;
+      height: 20px;
+      margin-right: 6px;
+    }
+
+    .toggle-item label {
+      flex: 1;
+      font-size: 14px;
+    }
+
+    #coords {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 5px 10px;
+      font-family: monospace;
+      border-radius: 6px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="controls">
+  <h3 id="toggle-header">▶ Mostrar Waypoints</h3>
+  <div id="toggle-list">
+    <div class="toggle-item">
+      <input type="checkbox" id="toggle-all" checked />
+      <label for="toggle-all"><strong>Todos</strong></label>
+    </div>
+    <!-- Waypoint toggles inserted by JS -->
+  </div>
+</div>
+<div id="coords">X: –, Z: –</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  const map = L.map('map', {
+    crs: L.CRS.Simple,
+    minZoom: -5
+  });
+
+  const tileSize = 512;
+
+  const tileCoords = [
+    [0, 0], [0, 1], [0, -1], [0, 2], [0, -2],
+    [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1],
+    [-1, -1], [1, 2], [-1, 2], [2, 0], [-2, 0],
+    [-2, 1], [-2, -1], [-2, -2]
+  ];
+
+  const tileLayerGroup = L.layerGroup().addTo(map);
+
+  tileCoords.forEach(([x, y]) => {
+    const bounds = [
+      [(-y) * tileSize, x * tileSize],
+      [(-y + 1) * tileSize, (x + 1) * tileSize]
+    ];
+    const url = `tiles/${x},${y}.png`;
+    L.imageOverlay(url, bounds).addTo(tileLayerGroup);
+  });
+
+  const allBounds = L.latLngBounds([
+    [-tileSize * 3, -tileSize * 3],
+    [tileSize * 3, tileSize * 3]
+  ]);
+  map.fitBounds(allBounds);
+</script>
+
+<!-- Waypoints & Icons -->
+<script src="waypoints.js"></script>
+<script>
+  const icons = {
+    default: 'default.png',
+    aeropuerto: 'aeropuerto.png',
+    arena: 'arena.png',
+    autos: 'autos.png',
+    banco: 'banco.png',
+    bar: 'bar.png',
+    biblioteca: 'biblioteca.png',
+    bomberos: 'bomberos.png',
+    burger: 'burger.png',
+    casa: 'casa.png',
+    casino: 'casino.png',
+    cementerio: 'cementerio.png',
+    cine: 'cine.png',
+    correo: 'correo.png',
+    edificio: 'edificio.png',
+    ejercito: 'ejercito.png',
+    embajada: 'embajada.png',
+    escuela: 'escuela.png',
+    estadio: 'estadio.png',
+    gobierno: 'gobierno.png',
+    hipodromo: 'hipodromo.png',
+    hospital: 'hospital.png',
+    hotel: 'hotel.png',
+    iglesia: 'iglesia.png',
+    interes: 'interes.png',
+    mercado: 'mercado.png',
+    metro: 'metro.png',
+    motel: 'motel.png',
+    museo: 'museo.png',
+    naturaleza: 'naturaleza.png',
+    nuclear: 'nuclear.png',
+    parque: 'parque.png',
+    playa: 'playa.png',
+    plaza: 'plaza.png',
+    poblado: 'poblado.png',
+    policia: 'policia.png',
+    puente: 'puente.png',
+    puerto: 'puerto.png',
+    radio: 'radio.png',
+    restaurante: 'restaurante.png',
+    shopping: 'shopping.png',
+    super: 'super.png',
+    universidad: 'universidad.png',
+    zoo: 'zoo.png'
+  };
+
+  const leafletIcons = {};
+  for (const [type, file] of Object.entries(icons)) {
+    leafletIcons[type] = L.icon({
+      iconUrl: `icons/${file}`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
+    });
+  }
+
+  const layersByType = {};
+  const controlsList = document.getElementById('toggle-list');
+
+  // Crear marcadores por tipo
+  waypoints.forEach(({ name, x, z, type }) => {
+    const latLng = [ -z, x ];
+    const icon = leafletIcons[type] || leafletIcons.default;
+
+    if (!layersByType[type]) {
+      layersByType[type] = L.layerGroup().addTo(map);
+    }
+
+    L.marker(latLng, { icon }).addTo(layersByType[type]).bindPopup(name);
+  });
+
+  // Crear toggles con íconos
+  Object.keys(layersByType).forEach(type => {
+    const div = document.createElement('div');
+    div.className = 'toggle-item';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = true;
+    checkbox.id = `toggle-${type}`;
+
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) {
+        map.addLayer(layersByType[type]);
+      } else {
+        map.removeLayer(layersByType[type]);
+      }
+
+      // Sync global checkbox
+      const allChecked = Array.from(document.querySelectorAll('#toggle-list input[type="checkbox"]:not(#toggle-all)')).every(cb => cb.checked);
+      document.getElementById('toggle-all').checked = allChecked;
+    });
+
+    const img = document.createElement('img');
+    img.src = `icons/${icons[type] || 'default.png'}`;
+    img.alt = type;
+
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = ` ${type}`;
+
+    div.appendChild(checkbox);
+    div.appendChild(img);
+    div.appendChild(label);
+    controlsList.appendChild(div);
+  });
+
+  // Toggle global
+  const toggleAll = document.getElementById('toggle-all');
+  toggleAll.addEventListener('change', () => {
+    const checked = toggleAll.checked;
+    Object.entries(layersByType).forEach(([type, layer]) => {
+      const cb = document.getElementById(`toggle-${type}`);
+      cb.checked = checked;
+      if (checked) map.addLayer(layer);
+      else map.removeLayer(layer);
+    });
+  });
+
+  // Desplegar/cerrar panel
+  const header = document.getElementById('toggle-header');
+  const toggleList = document.getElementById('toggle-list');
+  let isOpen = false;
+  header.addEventListener('click', () => {
+    isOpen = !isOpen;
+    toggleList.style.display = isOpen ? 'block' : 'none';
+    header.textContent = `${isOpen ? '▼' : '▶'} Mostrar Waypoints`;
+  });
+</script>
+
+<!-- Coordenadas -->
+<script>
+  const coordsDisplay = document.getElementById('coords');
+  map.on('mousemove', function (e) {
+    const x = Math.floor(e.latlng.lng);
+    const z = -Math.floor(e.latlng.lat);
+    coordsDisplay.textContent = `X: ${x}, Z: ${z}`;
+  });
+</script>
+
+</body>
+</html>
