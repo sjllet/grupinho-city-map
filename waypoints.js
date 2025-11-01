@@ -718,5 +718,29 @@ const waypoints = [
 		x: -543,
 		z: -56,
 		type: "hipodromo"
+	},
+	{
+		name: "Comité Olímpico Silipolitano",
+		x: -434,
+		z: 109,
+		type: "edificio"
+	},
+	{
+		name: "Casino",
+		x: 307,
+		z: 30,
+		type: "casino"
+	},
+	{
+		name: "Walmart",
+		x: 324,
+		z: 191,
+		type: "super"
+	},
+	{
+		name: "Torres Gemelas",
+		x: 476,
+		z: -99,
+		type: "edificio"
 	}
 ];
