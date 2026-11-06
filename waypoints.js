@@ -144,9 +144,15 @@ const waypoints = [
 		type: "super"
 	},
 	{
-		name: "Hospital del Defenestrado",
+		name: "Cementerio de Silipol",
 		x: -218,
 		z: 105,
+		type: "cementerio"
+	},
+	{
+		name: "Hospital del Defenestrado",
+		x: -499,
+		z: 47,
 		type: "hospital"
 	},
 	{
@@ -678,7 +684,7 @@ const waypoints = [
 		type: "autos"
 	},
 	{
-		name: "Pico ???",
+		name: "Pico Micchotta",
 		x: -171,
 		z: -543,
 		type: "naturaleza"
@@ -742,5 +748,11 @@ const waypoints = [
 		x: 476,
 		z: -99,
 		type: "edificio"
+	},
+	{
+		name: "Embajada de Cocacinia (Silipol)",
+		x: -500,
+		z: 180,
+		type: "embajada"
 	}
 ];
